@@ -1,0 +1,102 @@
+name: Build Mobile App
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'mobile/**'
+      - '.github/workflows/mobile-build.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'mobile/**'
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: mobile
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: mobile/package-lock.json
+
+      - name: Setup Expo CLI
+        uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Type check
+        run: npx tsc --noEmit
+
+      - name: Build Android APK (Preview)
+        run: eas build --platform android --profile preview --non-interactive
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+
+      - name: Build iOS (Simulator) — scheduled only
+        if: github.event_name == 'workflow_dispatch'
+        run: eas build --platform ios --profile simulator --non-interactive
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: builds/
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: mobile-v${{ github.run_number }}
+          name: Mobile App Build ${{ github.run_number }}
+          body: |
+            ## CrowdShield Mobile App
+            
+            ### Downloads
+            - **Android APK**: Download `build-preview.apk` from the artifacts
+            - **iOS**: Build via `eas build --platform ios` (requires Apple Developer Account)
+            
+            ### Installation
+            1. Download the APK file
+            2. On Android, enable "Install from Unknown Sources" if prompted
+            3. Install and open CrowdShield
+            
+            ### Features
+            - Real-time crowd monitoring dashboard
+            - Digital venue twin with interactive zones
+            - CCTV camera feeds
+            - Device camera with AI crowd detection
+            - Push notifications for critical alerts
+            - Missing persons & items reporting
+            - AI-powered safety assistant
+            - Response team management
+          files: |
+            builds/**/*.apk
+            builds/**/*.ipa
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
