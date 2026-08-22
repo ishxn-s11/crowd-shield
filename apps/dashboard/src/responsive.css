@@ -1,0 +1,68 @@
+/* ══════════════════════════════════════════════════════════════
+   CrowdShield — Responsive Layout System (Neuromorphic)
+   Breakpoints: mobile < 768px, tablet 768-1024px, desktop > 1024px
+   ══════════════════════════════════════════════════════════════ */
+
+/* ─── Responsive Grid Classes ─── */
+.grid-2col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.grid-3col { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+.grid-4col { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+.grid-6col { display: grid; grid-template-columns: repeat(6, 1fr); gap: 12px; }
+.grid-sidebar { display: grid; grid-template-columns: 300px 1fr; gap: 16px; }
+.grid-monitor { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.grid-cameras { display: grid; grid-template-columns: 1fr 320px; gap: 16px; }
+.grid-assistant { display: grid; grid-template-columns: 1fr 400px; gap: 16px; }
+.grid-case { display: grid; grid-template-columns: 400px 1fr; gap: 24px; }
+.grid-case-reverse { display: grid; grid-template-columns: 1fr 400px; gap: 24px; }
+
+.scroll-y { overflow-y: auto; overflow-x: hidden; }
+.scroll-x { overflow-x: auto; overflow-y: hidden; }
+.scroll-auto { overflow: auto; }
+.flex-col { display: flex; flex-direction: column; }
+.flex-wrap { flex-wrap: wrap; }
+
+/* ─── Responsive: Tablet (≤ 1024px) ─── */
+@media (max-width: 1024px) {
+  .grid-6col { grid-template-columns: repeat(3, 1fr); }
+  .grid-sidebar { grid-template-columns: 220px 1fr; }
+  .grid-cameras { grid-template-columns: 1fr 260px; }
+  .grid-assistant { grid-template-columns: 1fr 320px; }
+  .grid-case, .grid-case-reverse { grid-template-columns: 1fr; }
+}
+
+/* ─── Responsive: Mobile (≤ 768px) ─── */
+@media (max-width: 768px) {
+  .grid-2col, .grid-3col, .grid-4col, .grid-6col,
+  .grid-sidebar, .grid-monitor, .grid-cameras,
+  .grid-assistant, .grid-case, .grid-case-reverse {
+    grid-template-columns: 1fr;
+  }
+  .grid-2col, .grid-3col, .grid-4col, .grid-6col { gap: 8px; }
+  .hide-mobile { display: none !important; }
+}
+
+/* ─── Responsive: Small Mobile (≤ 480px) ─── */
+@media (max-width: 480px) {
+  .grid-2col, .grid-3col { grid-template-columns: 1fr; }
+}
+
+/* ─── Sidebar Mobile Overlay ─── */
+@media (max-width: 768px) {
+  .sidebar-overlay {
+    position: fixed !important;
+    inset: 0;
+    z-index: 1000;
+  }
+  .sidebar-overlay .sidebar-panel {
+    width: 240px !important;
+    height: 100vh;
+    position: relative;
+  }
+  .sidebar-overlay .sidebar-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.6);
+    backdrop-filter: blur(4px);
+    z-index: -1;
+  }
+}
