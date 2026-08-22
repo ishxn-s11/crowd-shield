@@ -1,0 +1,60 @@
+version: '3.8'
+
+services:
+  # ── API Backend (port 8000) ──
+  api:
+    build:
+      context: .
+      dockerfile: infrastructure/docker/Dockerfile.api
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=sqlite+aiosqlite:///./crowdshield.db
+      - SECRET_KEY=${SECRET_KEY:-crowdshield-dev-secret-key-change-in-production}
+      - DEBUG=true
+      - CORS_ORIGINS=["http://localhost:5173","http://localhost:3000","http://localhost:5173"]
+    volumes:
+      - api-data:/app/data
+      - ./ml/models:/app/ml/models:ro
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ── Dashboard (port 5173) ──
+  dashboard:
+    build:
+      context: .
+      dockerfile: infrastructure/docker/Dockerfile.dashboard
+    ports:
+      - "5173:80"
+    depends_on:
+      - api
+    restart: unless-stopped
+
+  # ── Webcam Inference Server (port 8002) ──
+  webcam:
+    build:
+      context: .
+      dockerfile: infrastructure/docker/Dockerfile.vision
+    ports:
+      - "8002:8002"
+    environment:
+      - WEBCAM_SOURCE=simulated
+      - WEBCAM_PORT=8002
+    depends_on:
+      - api
+    restart: unless-stopped
+    # Uncomment for GPU support:
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: 1
+    #           capabilities: [gpu]
+
+volumes:
+  api-data:

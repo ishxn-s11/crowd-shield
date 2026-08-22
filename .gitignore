@@ -1,0 +1,30 @@
+node_modules/
+.env
+.env.*
+*.log
+.DS_Store
+
+# Mobile
+mobile/.expo/
+mobile/ios/
+mobile/android/
+
+# Desktop
+desktop/dist/
+
+# Lock files (keep package-lock for CI)
+*.lock
+!package-lock.json
+
+# Build artifacts
+dist/
+build/
+coverage/
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+Thumbs.db
+desktop.ini

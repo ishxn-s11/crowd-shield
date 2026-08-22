@@ -1,0 +1,283 @@
+/* ══════════════════════════════════════════════════════════════
+   CrowdShield — Transparent Neuromorphic Design System
+   Palette: #C50022 (Red) · #000000 (Black) · #B5AC8A (Beige)
+   ══════════════════════════════════════════════════════════════ */
+
+@import "tailwindcss";
+
+:root {
+  /* ─── Core Palette ─── */
+  --cs-red: #C50022;
+  --cs-red-dim: #C5002240;
+  --cs-red-glow: #C5002220;
+  --cs-red-bright: #e6002a;
+  --cs-black: #000000;
+  --cs-beige: #B5AC8A;
+  --cs-beige-dim: #B5AC8A30;
+  --cs-beige-glow: #B5AC8A15;
+
+  /* ─── Semantic Colors ─── */
+  --cs-bg: #050505;
+  --cs-surface: rgba(255, 255, 255, 0.03);
+  --cs-surface-hover: rgba(255, 255, 255, 0.06);
+  --cs-surface-active: rgba(255, 255, 255, 0.08);
+  --cs-glass: rgba(15, 15, 15, 0.65);
+  --cs-glass-border: rgba(181, 172, 138, 0.12);
+  --cs-glass-border-hover: rgba(181, 172, 138, 0.25);
+  --cs-neuro-shadow: 0 4px 24px rgba(0,0,0,0.5), 0 1px 4px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.03);
+  --cs-neuro-shadow-lg: 0 8px 40px rgba(0,0,0,0.6), 0 2px 8px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.04);
+  --cs-neuro-inset: inset 0 2px 4px rgba(0,0,0,0.3), inset 0 -1px 0 rgba(255,255,255,0.02);
+
+  /* ─── Text ─── */
+  --cs-text: #e8e4dd;
+  --cs-text-dim: #9a9588;
+  --cs-text-muted: #6b6760;
+  --cs-text-bright: #ffffff;
+
+  /* ─── Risk Colors (kept for data viz) ─── */
+  --cs-green: #5cb85c;
+  --cs-yellow: #B5AC8A;
+  --cs-orange: #d4813a;
+  --cs-risk-critical: var(--cs-red);
+  --cs-risk-high: var(--cs-orange);
+  --cs-risk-moderate: var(--cs-yellow);
+  --cs-risk-low: var(--cs-green);
+
+  /* ─── Typography ─── */
+  --font-primary: 'Space Grotesk', system-ui, sans-serif;
+  --font-display: 'Syne', 'Space Grotesk', system-ui, sans-serif;
+
+  /* ─── Spacing ─── */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+
+  /* ─── Transitions ─── */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --transition-fast: 0.15s var(--ease-out);
+  --transition-med: 0.3s var(--ease-out);
+  --transition-slow: 0.5s var(--ease-out);
+}
+
+/* ─── Reset ─── */
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+html, body {
+  min-height: 100%;
+  width: 100%;
+  background: var(--cs-bg);
+  color: var(--cs-text);
+  font-family: var(--font-primary);
+  overflow: auto;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+#root { min-height: 100vh; }
+
+/* ─── Typography Defaults ─── */
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-display);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--cs-text-bright);
+}
+
+/* ─── Scrollbar ─── */
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--cs-glass-border); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(181, 172, 138, 0.3); }
+
+/* ─── Animations ─── */
+@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+@keyframes pulse-glow { 0%, 100% { box-shadow: 0 0 8px var(--cs-red-dim); } 50% { box-shadow: 0 0 20px var(--cs-red-dim); } }
+@keyframes slide-in { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+@keyframes fade-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes glow-border { 0%, 100% { border-color: var(--cs-glass-border); } 50% { border-color: var(--cs-red-dim); } }
+@keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
+@keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
+
+.animate-pulse { animation: pulse 2s ease-in-out infinite; }
+.animate-pulse-glow { animation: pulse-glow 2s ease-in-out infinite; }
+.animate-slide-in { animation: slide-in 0.3s ease-out; }
+.animate-fade-in { animation: fade-in 0.3s ease-out; }
+.animate-float { animation: float 3s ease-in-out infinite; }
+
+/* ─── Neuromorphic Glass Components ─── */
+.neuro-glass {
+  background: var(--cs-glass);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--cs-glass-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--cs-neuro-shadow);
+  transition: all var(--transition-fast);
+}
+.neuro-glass:hover {
+  border-color: var(--cs-glass-border-hover);
+  box-shadow: var(--cs-neuro-shadow-lg);
+}
+.neuro-glass-static {
+  background: var(--cs-glass);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--cs-glass-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--cs-neuro-shadow);
+}
+
+/* ─── Neuromorphic Buttons ─── */
+.neuro-btn {
+  font-family: var(--font-primary);
+  font-size: 13px;
+  font-weight: 600;
+  padding: 10px 20px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--cs-glass-border);
+  background: var(--cs-surface);
+  color: var(--cs-text);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  box-shadow: var(--cs-neuro-inset);
+  outline: none;
+  position: relative;
+  overflow: hidden;
+}
+.neuro-btn:hover {
+  background: var(--cs-surface-hover);
+  border-color: var(--cs-glass-border-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.05);
+}
+.neuro-btn:active {
+  transform: translateY(0);
+  box-shadow: var(--cs-neuro-inset);
+}
+.neuro-btn:focus-visible {
+  outline: 2px solid var(--cs-red);
+  outline-offset: 2px;
+}
+.neuro-btn-primary {
+  background: var(--cs-red);
+  border-color: var(--cs-red);
+  color: #fff;
+  box-shadow: 0 2px 12px var(--cs-red-dim), inset 0 1px 0 rgba(255,255,255,0.15);
+}
+.neuro-btn-primary:hover {
+  background: var(--cs-red-bright);
+  border-color: var(--cs-red-bright);
+  box-shadow: 0 4px 20px var(--cs-red-dim), inset 0 1px 0 rgba(255,255,255,0.2);
+}
+.neuro-btn-beige {
+  background: var(--cs-beige-dim);
+  border-color: rgba(181, 172, 138, 0.3);
+  color: var(--cs-beige);
+}
+.neuro-btn-beige:hover {
+  background: rgba(181, 172, 138, 0.2);
+  border-color: rgba(181, 172, 138, 0.5);
+}
+
+/* ─── Neuromorphic Inputs ─── */
+.neuro-input {
+  font-family: var(--font-primary);
+  width: 100%;
+  padding: 10px 14px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--cs-glass-border);
+  background: rgba(0, 0, 0, 0.4);
+  color: var(--cs-text);
+  font-size: 13px;
+  outline: none;
+  transition: all var(--transition-fast);
+  box-shadow: var(--cs-neuro-inset);
+}
+.neuro-input:focus {
+  border-color: var(--cs-red);
+  box-shadow: var(--cs-neuro-inset), 0 0 0 2px var(--cs-red-glow);
+}
+.neuro-input::placeholder { color: var(--cs-text-muted); }
+
+.neuro-select {
+  font-family: var(--font-primary);
+  width: 100%;
+  padding: 10px 14px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--cs-glass-border);
+  background: rgba(0, 0, 0, 0.4);
+  color: var(--cs-text);
+  font-size: 13px;
+  outline: none;
+  appearance: auto;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  box-shadow: var(--cs-neuro-inset);
+}
+.neuro-select:focus {
+  border-color: var(--cs-red);
+}
+
+/* ─── Risk Level Colors ─── */
+.risk-critical { color: var(--cs-risk-critical); }
+.risk-high { color: var(--cs-risk-high); }
+.risk-moderate { color: var(--cs-risk-moderate); }
+.risk-low { color: var(--cs-risk-low); }
+
+.bg-risk-critical { background: var(--cs-risk-critical); }
+.bg-risk-high { background: var(--cs-risk-high); }
+.bg-risk-moderate { background: var(--cs-risk-moderate); }
+.bg-risk-low { background: var(--cs-risk-low); }
+
+/* ─── Utility Classes ─── */
+.text-red { color: var(--cs-red); }
+.text-beige { color: var(--cs-beige); }
+.text-dim { color: var(--cs-text-dim); }
+.text-muted { color: var(--cs-text-muted); }
+.text-bright { color: var(--cs-text-bright); }
+.bg-red { background: var(--cs-red); }
+.bg-beige { background: var(--cs-beige); }
+.border-glass { border: 1px solid var(--cs-glass-border); }
+.border-red { border-color: var(--cs-red); }
+
+/* ─── Neuromorphic Icons ─── */
+.neuro-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: var(--cs-glass);
+  border: 1px solid var(--cs-glass-border);
+  box-shadow: var(--cs-neuro-shadow), inset 0 1px 0 rgba(255,255,255,0.04);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  transition: all var(--transition-fast);
+  flex-shrink: 0;
+}
+.neuro-icon:hover {
+  border-color: var(--cs-glass-border-hover);
+  box-shadow: var(--cs-neuro-shadow-lg), inset 0 1px 0 rgba(255,255,255,0.06);
+  transform: translateY(-1px);
+}
+.neuro-icon-sm {
+  width: 28px;
+  height: 28px;
+  border-radius: 7px;
+}
+.neuro-icon-lg {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+}
+
+/* ─── Prefers Reduced Motion ─── */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

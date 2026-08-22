@@ -1,0 +1,72 @@
+{
+  "expo": {
+    "name": "CrowdShield",
+    "slug": "crowdshield",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "dark",
+    "splash": {
+      "backgroundColor": "#0a0a0f",
+      "resizeMode": "contain"
+    },
+    "assetBundlePatterns": ["**/*"],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "io.crowdshield.mobile",
+      "config": {
+        "usesNonExemptEncryption": false
+      },
+      "infoPlist": {
+        "NSCameraUsageDescription": "CrowdShield needs camera access for real-time crowd detection.",
+        "NSMicrophoneUsageDescription": "CrowdShield needs microphone access for ambient noise monitoring.",
+        "NSLocationWhenInUseUsageDescription": "CrowdShield needs location access for emergency navigation.",
+        "NSLocationAlwaysUsageDescription": "CrowdShield needs background location for emergency alerts."
+      }
+    },
+    "android": {
+      "package": "io.crowdshield.mobile",
+      "adaptiveIcon": {
+        "backgroundColor": "#0a0a0f"
+      },
+      "permissions": [
+        "CAMERA",
+        "RECORD_AUDIO",
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION",
+        "ACCESS_BACKGROUND_LOCATION",
+        "RECEIVE_BOOT_COMPLETED",
+        "VIBRATE",
+        "SCHEDULE_EXACT_ALARM"
+      ],
+      "googleServicesFile": "./google-services.json"
+    },
+    "plugins": [
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "CrowdShield needs camera access for real-time crowd detection.",
+          "microphonePermission": "CrowdShield needs microphone access for ambient noise monitoring."
+        }
+      ],
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "CrowdShield needs location access for emergency navigation."
+        }
+      ],
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/notification-icon.png",
+          "color": "#C50022"
+        }
+      ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "crowdshield"
+      }
+    }
+  }
+}
