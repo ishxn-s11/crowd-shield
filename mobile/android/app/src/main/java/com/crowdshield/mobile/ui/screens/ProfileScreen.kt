@@ -20,6 +20,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.crowdshield.mobile.ui.components.*
 import com.crowdshield.mobile.ui.theme.*
 
 data class SettingItem(val icon: ImageVector, val label: String, val color: Color, val sub: String? = null)

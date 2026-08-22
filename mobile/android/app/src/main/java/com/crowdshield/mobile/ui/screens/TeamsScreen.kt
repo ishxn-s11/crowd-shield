@@ -48,7 +48,7 @@ fun TeamsScreen() {
         SectionHeader(
             icon = Icons.Default.People,
             title = "RESPONSE TEAMS",
-            action = CsButton(text = "Create", onClick = {}, variant = ButtonVariant.Primary),
+            action = { CsButton(text = "Create", onClick = {}, variant = ButtonVariant.Primary) },
         )
 
         // Stats

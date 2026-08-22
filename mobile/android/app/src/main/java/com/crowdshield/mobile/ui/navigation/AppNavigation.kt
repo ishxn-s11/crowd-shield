@@ -85,6 +85,15 @@ fun CrowdShieldNavHost() {
                                 maxLines = 1,
                             )
                         },
+                        onClick = {
+                            navController.navigate(screen.route) {
+                                popUpTo(navController.graph.findStartDestination().id) {
+                                    saveState = true
+                                }
+                                launchSingleTop = true
+                                restoreState = true
+                            }
+                        },
                         selected = selected,
                         colors = NavigationBarItemDefaults.colors(
                             selectedIconColor = CsRed,
