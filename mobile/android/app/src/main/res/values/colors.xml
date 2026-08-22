@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="cs_red">#FFC50022</color>
+    <color name="cs_bg">#FF0A0A0F</color>
+    <color name="cs_surface">#FF12121A</color>
+    <color name="cs_text">#FFE8E4DD</color>
+    <color name="cs_green">#FF5CB85C</color>
+    <color name="cs_orange">#FFF0AD4E</color>
+    <color name="cs_beige">#FFB5AC8A</color>
+</resources>

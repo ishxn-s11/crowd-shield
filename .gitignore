@@ -10,7 +10,10 @@ node_modules/
 # Mobile
 mobile/.expo/
 mobile/ios/
-mobile/android/
+mobile/android/build/
+mobile/android/app/build/
+mobile/android/.gradle/
+mobile/android/local.properties
 
 # Desktop
 desktop/dist/

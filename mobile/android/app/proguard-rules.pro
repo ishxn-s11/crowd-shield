@@ -1,0 +1,3 @@
+-dontwarn okhttp3.**
+-dontwarn retrofit2.**
+-keep class com.crowdshield.mobile.data.model.** { *; }
