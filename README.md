@@ -106,6 +106,4 @@ MIT License
 | | Name | Role |
 |---|------|------|
 | 👤 | **Ishan Singh** | Project Owner & Lead Developer |
-| 🤖 | **Buffy (Codebuff)** | AI Coding Agent — Documentation, CI/CD, Testing, Infrastructure |
 
-<sub>Built with ❤️ by the CrowdShield team and [Codebuff](https://codebuff.com) 🤖</sub>
