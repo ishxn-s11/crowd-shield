@@ -95,10 +95,6 @@ npm run dev
 python -m pytest tests/
 ```
 
-## 📄 License
-
-MIT License
-
 ---
 
 ## 👥 Contributors
