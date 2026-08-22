@@ -62,6 +62,12 @@
           "color": "#C50022"
         }
       ]
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "4b78aeb1-3e26-43a9-8023-4114f082465d"
+      }
+    },
+    "owner": "ishxns11"
   }
 }
