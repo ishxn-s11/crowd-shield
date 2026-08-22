@@ -3,6 +3,7 @@ package com.crowdshield.mobile.ui.screens
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -116,7 +117,7 @@ fun AssistantScreen() {
         // Quick Actions (shown at start)
         if (messages.size <= 1) {
             Row(
-                modifier = Modifier.padding(horizontal = 12.dp).horizontalScroll(rememberScrollState()),
+                modifier = Modifier.padding(horizontal = 12.dp).horizontalScroll(androidx.compose.foundation.rememberScrollState()),
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 QUICK_ACTIONS.forEach { q ->
@@ -167,5 +168,4 @@ fun AssistantScreen() {
     }
 }
 
-@Composable
-private fun rememberScrollState() = androidx.compose.foundation.rememberScrollState()
+

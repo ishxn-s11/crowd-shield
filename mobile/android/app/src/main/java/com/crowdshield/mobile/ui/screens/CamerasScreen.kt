@@ -65,19 +65,19 @@ fun CamerasScreen() {
             GlassCard(modifier = Modifier.weight(1f), padding = 12.dp) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth()) {
                     Text("${CAMERAS.count { it.online }}", color = CsGreen, fontSize = 22.sp, fontWeight = FontWeight.ExtraBold)
-                    Text("Online", color = CsTextMuted, fontSize = 10.sp, marginTop = 2.dp)
+                    Text("Online", color = CsTextMuted, fontSize = 10.sp, modifier = Modifier.padding(top = 2.dp))
                 }
             }
             GlassCard(modifier = Modifier.weight(1f), padding = 12.dp) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth()) {
                     Text("${CAMERAS.count { !it.online }}", color = Color(0xFFFF4444), fontSize = 22.sp, fontWeight = FontWeight.ExtraBold)
-                    Text("Offline", color = CsTextMuted, fontSize = 10.sp, marginTop = 2.dp)
+                    Text("Offline", color = CsTextMuted, fontSize = 10.sp, modifier = Modifier.padding(top = 2.dp))
                 }
             }
             GlassCard(modifier = Modifier.weight(1f), padding = 12.dp) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth()) {
                     Text("${CAMERAS.size}", color = CsBeige, fontSize = 22.sp, fontWeight = FontWeight.ExtraBold)
-                    Text("Total", color = CsTextMuted, fontSize = 10.sp, marginTop = 2.dp)
+                    Text("Total", color = CsTextMuted, fontSize = 10.sp, modifier = Modifier.padding(top = 2.dp))
                 }
             }
         }
@@ -92,7 +92,7 @@ fun CamerasScreen() {
         ) {
             items(CAMERAS) { cam ->
                 val zd = zones.values.find { z -> z.name.contains(cam.zone, ignoreCase = true) }
-                GlassCard(padding = 0) {
+                GlassCard(padding = 0.dp) {
                     // Camera preview placeholder
                     Box(
                         modifier = Modifier.fillMaxWidth().height(120.dp)

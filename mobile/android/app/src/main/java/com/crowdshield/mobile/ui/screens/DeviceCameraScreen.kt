@@ -47,7 +47,7 @@ fun DeviceCameraScreen() {
         SectionHeader(icon = Icons.Default.PhoneAndroid, title = "DEVICE CAMERA")
 
         // Camera preview
-        GlassCard(padding = 0) {
+        GlassCard(padding = 0.dp) {
             Box(
                 modifier = Modifier.fillMaxWidth().height(280.dp)
                     .background(CsSurface),
