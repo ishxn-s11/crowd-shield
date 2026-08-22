@@ -154,9 +154,3 @@ python -m pytest tests/
 
 ---
 
-## 👥 Contributors
-
-| | Name | Role |
-|---|------|------|
-| 👤 | **Ishan Singh** | Project Owner & Lead Developer |
-
