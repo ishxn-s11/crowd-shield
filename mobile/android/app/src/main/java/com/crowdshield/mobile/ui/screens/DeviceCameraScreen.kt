@@ -288,7 +288,6 @@ fun DeviceCameraScreen() {
                         onClick = { },
                         modifier = Modifier.weight(1f).height(38.dp),
                         shape = RoundedCornerShape(8.dp),
-                        border = ButtonDefaults.outlinedButtonBorder.copy(CsBeige.copy(alpha = 0.3f)),
                     ) {
                         Icon(Icons.Default.Link, contentDescription = null, modifier = Modifier.size(14.dp))
                         Spacer(modifier = Modifier.width(4.dp))
@@ -298,7 +297,6 @@ fun DeviceCameraScreen() {
                         onClick = { },
                         modifier = Modifier.weight(1f).height(38.dp),
                         shape = RoundedCornerShape(8.dp),
-                        border = ButtonDefaults.outlinedButtonBorder.copy(CsBeige.copy(alpha = 0.3f)),
                     ) {
                         Icon(Icons.Default.Usb, contentDescription = null, modifier = Modifier.size(14.dp))
                         Spacer(modifier = Modifier.width(4.dp))

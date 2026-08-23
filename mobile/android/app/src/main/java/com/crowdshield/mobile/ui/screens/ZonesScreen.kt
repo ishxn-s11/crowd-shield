@@ -179,7 +179,7 @@ fun ZonesScreen() {
                             containerColor = if (isSelected) color.copy(alpha = 0.1f) else CsSurface
                         ),
                         shape = RoundedCornerShape(8.dp),
-                        border = if (isSelected) CardDefaults.outlinedCardBorder().copy(color) else null,
+                        border = if (isSelected) androidx.compose.foundation.BorderStroke(1.dp, color) else null,
                     ) {
                         Column(modifier = Modifier.padding(10.dp)) {
                             Row(
