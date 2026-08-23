@@ -35,8 +35,7 @@
       "target": ["AppImage", "deb"],
       "icon": "build/icon.png",
       "category": "Utility",
-      "maintainer": "Ishan Singh <ishxn@crowdshield.io>",
-      "desktopName": "io.crowdshield.desktop"
+      "maintainer": "Ishan Singh <ishxn@crowdshield.io>"
     },
     "nsis": {
       "oneClick": false,
