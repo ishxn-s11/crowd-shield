@@ -22,6 +22,7 @@
     "productName": "CrowdShield",
     "directories": { "output": "dist" },
     "files": ["src/**/*", "src/renderer/**/*"],
+    "publish": null,
     "win": {
       "target": ["nsis", "portable"],
       "icon": "build/icon.ico"
@@ -35,7 +36,8 @@
       "target": ["AppImage", "deb"],
       "icon": "build/icon.png",
       "category": "Utility",
-      "maintainer": "Ishan Singh <ishxn@crowdshield.io>"
+      "maintainer": "Ishan Singh <ishxn@crowdshield.io>",
+      "desktopName": "io.crowdshield.desktop"
     },
     "nsis": {
       "oneClick": false,
