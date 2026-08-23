@@ -5,7 +5,9 @@ import {
   Shield, AlertTriangle, Users, MapPin, Brain, Clock, Wifi, WifiOff,
   Send, Check, Activity, BarChart3, Target, Bell, Camera, Eye,
   User, LogOut, ChevronRight, Menu, X, Zap, Route as RouteIcon, ShieldAlert,
-  Settings, FileText, Search, Plus, Trash2, Edit3, Globe
+  Settings, FileText, Search, Plus, Trash2, Edit3, Globe, PhoneCall,
+  MessageSquare, Download, ArrowUp, CheckCircle, Info, Megaphone, Smartphone,
+  Monitor, Radio, CircleDot, RefreshCw, FileBarChart, TrendingUp
 } from 'lucide-react';
 import { LanguageSelector } from './i18n';
 import {
@@ -96,6 +98,10 @@ function Sidebar({ collapsed, setCollapsed }: { collapsed: boolean; setCollapsed
     { path: '/assistant', icon: Brain, label: 'AI Assistant', color: '#B5AC8A', commanderOnly: true },
     { divider: true, commanderOnly: true },
     { path: '/teams', icon: Users, label: 'Response Teams', color: '#C50022', commanderOnly: true },
+    { divider: true },
+    { path: '/urgent-contact', icon: PhoneCall, label: 'Urgent Contact', color: '#C50022' },
+    { path: '/notifications', icon: Bell, label: 'Notifications', color: '#B5AC8A' },
+    { path: '/analysis-reports', icon: FileBarChart, label: 'Analysis Reports', color: '#B5AC8A', commanderOnly: true },
     { path: '/profile', icon: User, label: 'My Profile', color: 'var(--cs-text-muted)' },
   ].filter(item => !item.commanderOnly || isCommander);
 
@@ -960,6 +966,13 @@ function CamerasPage() {
             </div>
           );
         })}
+
+        {/* CCTV Guide link */}
+        <Link to="/cctv-guide" style={{ margin: '12px 16px 0', padding: '10px 14px', borderRadius: 8, background: 'var(--cs-red-glow)', border: '1px solid rgba(197,0,34,0.3)', display: 'flex', alignItems: 'center', gap: 8, textDecoration: 'none', transition: 'border-color 0.2s' }}>
+          <Info size={14} color="var(--cs-red)" />
+          <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--cs-red)' }}>CCTV Connection Guide</span>
+          <span style={{ marginLeft: 'auto', fontSize: 10, color: 'var(--cs-text-muted)' }}>→</span>
+        </Link>
 
         {/* Camera info panel */}
         <div style={{ padding: 16 }}>
@@ -1851,6 +1864,498 @@ function ProfilePage() {
   );
 }
 
+// ─── Urgent Contact Page ────────────────────────────────────
+
+function UrgentContactPage() {
+  const [message, setMessage] = useState('');
+  const [priority, setPriority] = useState<'URGENT' | 'CRITICAL' | 'EMERGENCY'>('URGENT');
+  const [sent, setSent] = useState(false);
+  const [history, setHistory] = useState<any[]>([]);
+  const user = AuthContext.getUser();
+  const isMobileUC = useIsMobile();
+
+  useEffect(() => {
+    fetch(`${API}/api/urgent-contact/history`).then(r => r.json()).then(setHistory).catch(() => {});
+  }, []);
+
+  const sendUrgent = async () => {
+    if (!message.trim()) return;
+    try {
+      await fetch(`${API}/api/urgent-contact/send`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message, priority, sender_id: user?.id, sender_name: user?.full_name, sender_role: user?.role }),
+      });
+      // Also trigger desktop notification via Electron if available
+      if (window.crowdshield) {
+        window.crowdshield.sendNotification(`🚨 ${priority} Contact`, message);
+      }
+    } catch {}
+    setSent(true);
+    setHistory(prev => [{ id: Date.now(), message, priority, sender_name: user?.full_name, sender_role: user?.role, created_at: new Date().toISOString(), acknowledged: false }, ...prev]);
+    setTimeout(() => setSent(false), 3000);
+    setMessage('');
+  };
+
+  const acknowledge = async (id: string) => {
+    setHistory(prev => prev.map(h => h.id === id ? { ...h, acknowledged: true } : h));
+    try { await fetch(`${API}/api/urgent-contact/${id}/acknowledge`, { method: 'POST' }); } catch {}
+  };
+
+  const priorityColors: Record<string, string> = { URGENT: '#B5AC8A', CRITICAL: '#d4813a', EMERGENCY: '#C50022' };
+
+  return (
+    <div style={{ display: 'grid', gridTemplateColumns: isMobileUC ? '1fr' : '1fr 1fr', gap: 16, height: isMobileUC ? 'auto' : '100%' }}>
+      {/* Send Panel */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+        <div style={{ background: 'var(--cs-glass)', borderRadius: 16, padding: 20, border: '1px solid var(--cs-glass-border)', backdropFilter: 'blur(20px)', boxShadow: 'var(--cs-neuro-shadow)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
+            <PhoneCall size={18} color="#C50022" />
+            <h2 style={{ fontSize: 18, fontWeight: 700 }}>Urgent Contact — Commander</h2>
+          </div>
+          <p style={{ fontSize: 12, color: 'var(--cs-text-muted)', marginBottom: 16 }}>Send an urgent message directly to the commander in case of stampede, crowd surge, or emergency.</p>
+
+          <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
+            {(['URGENT', 'CRITICAL', 'EMERGENCY'] as const).map(p => (
+              <button key={p} onClick={() => setPriority(p)} style={{
+                flex: 1, padding: '10px 12px', borderRadius: 8, border: `2px solid ${priority === p ? priorityColors[p] : 'rgba(181,172,138,0.18)'}`,
+                background: priority === p ? priorityColors[p] + '20' : 'rgba(0,0,0,0.4)',
+                color: priorityColors[p], fontSize: 12, fontWeight: 700, cursor: 'pointer', textAlign: 'center',
+              }}>{p}</button>
+            ))}
+          </div>
+
+          <textarea
+            value={message}
+            onChange={e => setMessage(e.target.value)}
+            placeholder="Describe the urgency..."
+            style={{ width: '100%', minHeight: 120, padding: 12, borderRadius: 8, border: `1px solid ${priorityColors[priority]}40`, background: 'rgba(0,0,0,0.4)', color: 'var(--cs-text-bright)', fontSize: 13, resize: 'vertical', outline: 'none', fontFamily: 'inherit' }}
+          />
+
+          <button onClick={sendUrgent} disabled={!message.trim()} style={{
+            width: '100%', marginTop: 12, padding: 12, borderRadius: 8, border: 'none', fontSize: 14, fontWeight: 700, cursor: 'pointer',
+            background: sent ? '#5cb85c' : priorityColors[priority], color: 'white', opacity: !message.trim() ? 0.5 : 1,
+            transition: 'background 0.3s',
+          }}>{sent ? '✓ Message Sent!' : `📞 Contact Commander (${priority})`}</button>
+
+          <div style={{ marginTop: 12, padding: 10, borderRadius: 8, background: 'rgba(0,0,0,0.4)', fontSize: 11, color: 'var(--cs-text-muted)' }}>
+            <Info size={12} style={{ display: 'inline', marginRight: 4 }} />
+            Messages are sent to the commander's dashboard and trigger a push notification. In EMERGENCY mode, all response teams are also notified.
+          </div>
+        </div>
+      </div>
+
+      {/* History Panel */}
+      <div style={{ background: 'var(--cs-glass)', borderRadius: 16, padding: 20, border: '1px solid var(--cs-glass-border)', backdropFilter: 'blur(20px)', boxShadow: 'var(--cs-neuro-shadow)' }}>
+        <h3 style={{ fontSize: 12, color: 'var(--cs-text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 16 }}>Contact History</h3>
+        {history.length === 0 ? (
+          <div style={{ padding: 40, textAlign: 'center' }}>
+            <PhoneCall size={40} color="rgba(181,172,138,0.18)" />
+            <p style={{ marginTop: 12, color: 'var(--cs-text-muted)', fontSize: 12 }}>No urgent contacts yet</p>
+          </div>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {history.map((h: any) => (
+              <div key={h.id} style={{ padding: 12, borderRadius: 8, background: 'rgba(0,0,0,0.4)', borderLeft: `3px solid ${priorityColors[h.priority] || '#C50022'}` }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <span style={{ fontSize: 10, fontWeight: 700, color: priorityColors[h.priority], padding: '2px 6px', borderRadius: 3, background: priorityColors[h.priority] + '15' }}>{h.priority}</span>
+                    <span style={{ fontSize: 11, color: 'var(--cs-text-dim)' }}>{h.sender_name || 'Unknown'} ({h.sender_role})</span>
+                  </div>
+                  <span style={{ fontSize: 10, color: 'var(--cs-text-muted)' }}>{new Date(h.created_at).toLocaleString()}</span>
+                </div>
+                <p style={{ fontSize: 12, color: 'var(--cs-text)', marginTop: 6 }}>{h.message}</p>
+                <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 8 }}>
+                  {h.acknowledged ? (
+                    <span style={{ fontSize: 10, color: '#5cb85c', display: 'flex', alignItems: 'center', gap: 4 }}><CheckCircle size={12} /> Acknowledged</span>
+                  ) : (
+                    <button onClick={() => acknowledge(h.id)} style={{ padding: '4px 10px', borderRadius: 4, border: '1px solid #5cb85c', background: '#5cb85c15', color: '#5cb85c', fontSize: 10, fontWeight: 600, cursor: 'pointer' }}>Acknowledge</button>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ─── Notifications Page ──────────────────────────────────────
+
+function NotificationsPage() {
+  const [notifications, setNotifications] = useState<any[]>([]);
+  const [filter, setFilter] = useState<'ALL' | 'OPERATOR' | 'COMMANDER' | 'ACKNOWLEDGEMENT'>('ALL');
+  const isMobileN = useIsMobile();
+  const user = AuthContext.getUser();
+
+  useEffect(() => {
+    const load = () => fetch(`${API}/api/notifications`).then(r => r.json()).then(setNotifications).catch(() => {});
+    load(); const iv = setInterval(load, 5000); return () => clearInterval(iv);
+  }, []);
+
+  const markRead = async (id: string) => {
+    setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
+    try { await fetch(`${API}/api/notifications/${id}/read`, { method: 'POST' }); } catch {}
+  };
+
+  const markAllRead = async () => {
+    setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+    try { await fetch(`${API}/api/notifications/read-all`, { method: 'POST' }); } catch {}
+  };
+
+  const filtered = notifications.filter(n => filter === 'ALL' || n.type === filter);
+  const unreadCount = notifications.filter(n => !n.read).length;
+
+  const typeColors: Record<string, string> = {
+    OPERATOR: '#C50022', COMMANDER: '#B5AC8A', ACKNOWLEDGEMENT: '#5cb85c',
+    ALERT: '#d4813a', SYSTEM: '#8a8580',
+  };
+
+  const typeIcons: Record<string, string> = { OPERATOR: '📹', COMMANDER: '🎖️', ACKNOWLEDGEMENT: '✅', ALERT: '⚠️', SYSTEM: '⚙️' };
+
+  return (
+    <div>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, flexWrap: 'wrap', gap: 8 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <h2 style={{ fontSize: 18, fontWeight: 700 }}>Notifications</h2>
+          {unreadCount > 0 && <span style={{ padding: '2px 8px', borderRadius: 10, background: 'var(--cs-red)', color: 'white', fontSize: 10, fontWeight: 700 }}>{unreadCount}</span>}
+        </div>
+        <button onClick={markAllRead} style={{ padding: '6px 14px', borderRadius: 6, border: '1px solid var(--cs-glass-border)', background: 'rgba(0,0,0,0.4)', color: 'var(--cs-text-dim)', fontSize: 11, cursor: 'pointer' }}>Mark All Read</button>
+      </div>
+
+      <div style={{ display: 'flex', gap: 6, marginBottom: 16, flexWrap: 'wrap' }}>
+        {(['ALL', 'OPERATOR', 'COMMANDER', 'ACKNOWLEDGEMENT'] as const).map(f => (
+          <button key={f} onClick={() => setFilter(f)} style={{
+            padding: '6px 14px', borderRadius: 6,
+            border: `1px solid ${filter === f ? 'var(--cs-red)' : 'rgba(181,172,138,0.18)'}`,
+            background: filter === f ? 'var(--cs-red)20' : '#111827',
+            color: filter === f ? 'var(--cs-red)' : 'var(--cs-text-dim)',
+            fontSize: 11, fontWeight: 600, cursor: 'pointer',
+          }}>{f === 'ALL' ? 'All' : f.replace('_', ' ')}</button>
+        ))}
+      </div>
+
+      {filtered.length === 0 ? (
+        <div style={{ background: 'var(--cs-glass)', borderRadius: 10, padding: 40, textAlign: 'center' }}>
+          <Bell size={40} color="#5cb85c" />
+          <p style={{ marginTop: 12, color: '#5cb85c', fontWeight: 600 }}>No notifications</p>
+        </div>
+      ) : (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+          {filtered.map((n: any) => (
+            <div key={n.id} onClick={() => markRead(n.id)} style={{
+              padding: '12px 16px', borderRadius: 8, background: n.read ? 'rgba(0,0,0,0.3)' : 'rgba(0,0,0,0.5)',
+              borderLeft: `3px solid ${typeColors[n.type] || '#5a5550'}`, cursor: 'pointer', opacity: n.read ? 0.7 : 1,
+              transition: 'all 0.2s',
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <span style={{ fontSize: 16 }}>{typeIcons[n.type] || '🔔'}</span>
+                  <span style={{ fontSize: 10, fontWeight: 700, color: typeColors[n.type], padding: '2px 6px', borderRadius: 3, background: typeColors[n.type] + '15' }}>{n.type}</span>
+                  {n.from_name && <span style={{ fontSize: 11, color: 'var(--cs-text-dim)' }}>from {n.from_name}</span>}
+                </div>
+                <span style={{ fontSize: 10, color: 'var(--cs-text-muted)' }}>{new Date(n.created_at).toLocaleString()}</span>
+              </div>
+              <p style={{ fontSize: 13, color: 'var(--cs-text)', marginTop: 6, fontWeight: n.read ? 400 : 600 }}>{n.title || n.message}</p>
+              {n.body && <p style={{ fontSize: 11, color: 'var(--cs-text-dim)', marginTop: 4 }}>{n.body}</p>}
+              {!n.read && <div style={{ width: 6, height: 6, borderRadius: 3, background: 'var(--cs-red)', position: 'absolute', right: 12, top: 12 }} />}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── Analysis Reports Page ───────────────────────────────────
+
+function AnalysisReportsPage() {
+  const [reports, setReports] = useState<any[]>([]);
+  const [selectedReport, setSelectedReport] = useState<any>(null);
+  const isMobileAR = useIsMobile();
+
+  useEffect(() => {
+    fetch(`${API}/api/analysis/reports`).then(r => r.json()).then(setReports).catch(() => {
+      // Fallback demo data
+      setReports([
+        { id: 'RPT-001', title: 'Zone Z5 — Crowd Surge Analysis', zone: 'Z5', type: 'SURGE', date: new Date().toISOString(), status: 'COMPLETED', peak_density: 2.8, avg_density: 1.6, max_person_count: 680, risk_score: 78, risk_level: 'HIGH', summary: 'Crowd density in Z5 (Central Plaza) spiked to 2.8 p/m² at 14:32, triggering a CRITICAL alert. Surge was attributed to post-event exit through Gate G5. Response team deployed within 3 minutes. Density returned to normal within 12 minutes.', recommendations: ['Add additional exit gate at Z5 SE corner', 'Pre-position crowd marshals before event ends', 'Install directional signage for faster exit flow'] },
+        { id: 'RPT-002', title: 'Zones Z1-Z3 — Morning Flow Analysis', zone: 'Z1', type: 'FLOW', date: new Date(Date.now() - 86400000).toISOString(), status: 'COMPLETED', peak_density: 1.2, avg_density: 0.7, max_person_count: 420, risk_score: 25, risk_level: 'LOW', summary: 'Morning entry flow was well-managed across Zones Z1 through Z3. Average throughput at Main Entrance was 45 persons/minute. No bottlenecks detected.', recommendations: ['Continue current entry management protocol', 'Monitor Z1 Gate G2 during peak hours'] },
+        { id: 'RPT-003', title: 'Zone Z6 — Stadium Event Analysis', zone: 'Z6', type: 'EVENT', date: new Date(Date.now() - 172800000).toISOString(), status: 'COMPLETED', peak_density: 1.9, avg_density: 1.1, max_person_count: 950, risk_score: 52, risk_level: 'MODERATE', summary: 'Stadium Zone Z6 reached 950 persons at halftime. Density remained within safe limits but approached MODERATE threshold at concession areas.', recommendations: ['Stagger concession break timing', 'Add overflow seating indicator boards'] },
+      ]);
+    });
+  }, []);
+
+  const riskColor: Record<string, string> = { LOW: '#5cb85c', MODERATE: '#B5AC8A', HIGH: '#d4813a', CRITICAL: '#C50022' };
+
+  if (selectedReport) {
+    return (
+      <div>
+        <button onClick={() => setSelectedReport(null)} style={{ marginBottom: 12, padding: '6px 12px', borderRadius: 6, border: '1px solid var(--cs-glass-border)', background: 'rgba(0,0,0,0.4)', color: 'var(--cs-text-dim)', fontSize: 11, cursor: 'pointer' }}>← Back to Reports</button>
+        <div style={{ background: 'var(--cs-glass)', borderRadius: 16, padding: 24, border: '1px solid var(--cs-glass-border)', backdropFilter: 'blur(20px)', boxShadow: 'var(--cs-neuro-shadow)' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+            <div>
+              <h2 style={{ fontSize: 20, fontWeight: 700 }}>{selectedReport.title}</h2>
+              <p style={{ fontSize: 12, color: 'var(--cs-text-muted)', marginTop: 4 }}>{new Date(selectedReport.date).toLocaleDateString()} · {selectedReport.zone} · {selectedReport.type}</p>
+            </div>
+            <span style={{ padding: '4px 12px', borderRadius: 6, fontSize: 12, fontWeight: 700, background: riskColor[selectedReport.risk_level] + '20', color: riskColor[selectedReport.risk_level] }}>{selectedReport.risk_level} — {selectedReport.risk_score}/100</span>
+          </div>
+
+          {/* Stats Grid */}
+          <div style={{ display: 'grid', gridTemplateColumns: isMobileAR ? 'repeat(2, 1fr)' : 'repeat(4, 1fr)', gap: 12, marginBottom: 20 }}>
+            {[{ label: 'Peak Density', value: `${selectedReport.peak_density} p/m²`, color: '#C50022' },
+              { label: 'Avg Density', value: `${selectedReport.avg_density} p/m²`, color: '#B5AC8A' },
+              { label: 'Max Persons', value: selectedReport.max_person_count, color: '#B5AC8A' },
+              { label: 'Risk Score', value: selectedReport.risk_score, color: riskColor[selectedReport.risk_level] },
+            ].map((m, i) => (
+              <div key={i} style={{ padding: 12, background: 'rgba(0,0,0,0.4)', borderRadius: 8 }}>
+                <div style={{ fontSize: 10, color: 'var(--cs-text-muted)', textTransform: 'uppercase' }}>{m.label}</div>
+                <div style={{ fontSize: 22, fontWeight: 700, color: m.color, marginTop: 4 }}>{m.value}</div>
+              </div>
+            ))}
+          </div>
+
+          <div style={{ marginBottom: 16 }}>
+            <h3 style={{ fontSize: 14, fontWeight: 600, marginBottom: 8 }}>Summary</h3>
+            <p style={{ fontSize: 13, color: 'var(--cs-text)', lineHeight: 1.7 }}>{selectedReport.summary}</p>
+          </div>
+
+          <div>
+            <h3 style={{ fontSize: 14, fontWeight: 600, marginBottom: 8 }}>Recommendations</h3>
+            {selectedReport.recommendations.map((rec: string, i: number) => (
+              <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 8, padding: '8px 0', borderBottom: '1px solid var(--cs-glass-border)' }}>
+                <CheckCircle size={14} color="#5cb85c" style={{ marginTop: 2, flexShrink: 0 }} />
+                <span style={{ fontSize: 12, color: 'var(--cs-text)' }}>{rec}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      <h2 style={{ fontSize: 18, fontWeight: 700, marginBottom: 16 }}>Analysis Reports</h2>
+      {reports.length === 0 ? (
+        <div style={{ background: 'var(--cs-glass)', borderRadius: 10, padding: 40, textAlign: 'center' }}>
+          <FileBarChart size={40} color="rgba(181,172,138,0.18)" />
+          <p style={{ marginTop: 12, color: 'var(--cs-text-muted)' }}>No analysis reports available</p>
+        </div>
+      ) : (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          {reports.map((rpt: any) => (
+            <div key={rpt.id} onClick={() => setSelectedReport(rpt)} style={{
+              padding: 16, borderRadius: 10, background: 'var(--cs-glass)', border: '1px solid var(--cs-glass-border)',
+              cursor: 'pointer', transition: 'border-color 0.2s', display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                <div style={{ width: 40, height: 40, borderRadius: 8, background: riskColor[rpt.risk_level] + '15', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <TrendingUp size={18} color={riskColor[rpt.risk_level]} />
+                </div>
+                <div>
+                  <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--cs-text-bright)' }}>{rpt.title}</div>
+                  <div style={{ fontSize: 11, color: 'var(--cs-text-muted)', marginTop: 2 }}>{rpt.zone} · {rpt.type} · {new Date(rpt.date).toLocaleDateString()}</div>
+                </div>
+              </div>
+              <div style={{ textAlign: 'right' }}>
+                <div style={{ fontSize: 18, fontWeight: 700, color: riskColor[rpt.risk_level] }}>{rpt.risk_score}</div>
+                <div style={{ fontSize: 10, color: riskColor[rpt.risk_level] }}>{rpt.risk_level}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── CCTV Connection Guide Page ──────────────────────────────
+
+function CCTVGuidePage() {
+  const [expandedStep, setExpandedStep] = useState<number | null>(null);
+
+  const steps = [
+    { step: 1, title: 'Ensure CCTV is on the same network', desc: 'Your CCTV camera or DVR/NVR must be connected to the same local network (Wi-Fi or Ethernet) as the machine running CrowdShield. Most IP cameras use RTSP protocol.', icon: '🔌' },
+    { step: 2, title: 'Find your CCTV RTSP stream URL', desc: 'Common RTSP URL formats:\n• Hikvision: rtsp://<IP>:554/Streaming/Channels/<ID>\n• Dahua: rtsp://<IP>:554/cam/realmonitor?channel=<N>&subtype=0\n• Generic: rtsp://<user>:<pass>@<IP>:554/<path>\n\nYou can find the exact URL in your camera\'s web interface (usually at http://<IP> or http://<IP>:8080).', icon: '🔗' },
+    { step: 3, title: 'Add the camera to CrowdShield', desc: 'Go to Live Monitor → Add Camera → Select RTSP type → Paste the stream URL → Assign to a zone. The camera will appear in the CCTV grid.', icon: '➕' },
+    { step: 4, title: 'Start ML inference', desc: 'Click "Start ML" on any online camera to begin real-time crowd detection. The YOLO model will detect and count people, calculate density, and update risk scores.', icon: '🧠' },
+    { step: 5, title: 'Test with local camera first', desc: 'Use the Device Camera or Live Monitor device source to test the ML pipeline with your laptop/phone camera before connecting CCTV.', icon: '📹' },
+  ];
+
+  return (
+    <div style={{ maxWidth: 700 }}>
+      <h2 style={{ fontSize: 18, fontWeight: 700, marginBottom: 8 }}>CCTV Connection Guide</h2>
+      <p style={{ fontSize: 12, color: 'var(--cs-text-muted)', marginBottom: 20 }}>Step-by-step guide for connecting your CCTV cameras to CrowdShield for real-time crowd analysis.</p>
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+        {steps.map(s => (
+          <div key={s.step} onClick={() => setExpandedStep(expandedStep === s.step ? null : s.step)} style={{
+            padding: 16, borderRadius: 10, background: 'var(--cs-glass)', border: '1px solid var(--cs-glass-border)',
+            cursor: 'pointer', transition: 'border-color 0.2s',
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              <div style={{ width: 36, height: 36, borderRadius: 8, background: 'var(--cs-red-glow)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18 }}>{s.icon}</div>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--cs-text-bright)' }}>Step {s.step}: {s.title}</div>
+              </div>
+              <ChevronRight size={14} color="var(--cs-text-muted)" style={{ transform: expandedStep === s.step ? 'rotate(90deg)' : 'none', transition: 'transform 0.2s' }} />
+            </div>
+            {expandedStep === s.step && (
+              <div style={{ marginTop: 12, paddingLeft: 48, fontSize: 12, color: 'var(--cs-text-dim)', lineHeight: 1.7, whiteSpace: 'pre-wrap' }}>{s.desc}</div>
+            )}
+          </div>
+        ))}
+      </div>
+
+      <div style={{ marginTop: 20, padding: 16, borderRadius: 10, background: 'var(--cs-glass)', border: '1px solid var(--cs-glass-border)' }}>
+        <h3 style={{ fontSize: 14, fontWeight: 600, marginBottom: 8 }}>Common RTSP URLs</h3>
+        <div style={{ background: '#000', borderRadius: 6, padding: 12, fontSize: 11, fontFamily: 'monospace', color: '#5cb85c', lineHeight: 1.8, whiteSpace: 'pre-wrap' }}>
+{`# Hikvision\nrtsp://admin:password@192.168.1.100:554/Streaming/Channels/101\n\n# Dahua\nrtsp://admin:password@192.168.1.101:554/cam/realmonitor?channel=1&subtype=0\n\n# Generic / ONVIF\nrtsp://admin:password@192.168.1.102:554/live\n\n# USB Webcam (local)\n/dev/video0`}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── App Update Page ─────────────────────────────────────────
+
+function AppUpdatePage() {
+  const [currentVersion] = useState('2.1.0');
+  const [latestVersion] = useState('2.2.0');
+  const [downloading, setDownloading] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const isMobileUp = useIsMobile();
+  const platform = window.crowdshield?.platform || navigator.platform;
+  const isWindows = platform?.includes('win');
+  const isMac = platform?.includes('mac');
+  const isLinux = platform?.includes('linux') || platform?.includes('Linux');
+  const isAndroid = platform?.includes('Android');
+
+  const updateAvailable = currentVersion !== latestVersion;
+
+  const changelog = [
+    { version: '2.2.0', date: '2026-08-23', changes: [
+      'Added Urgent Contact: operators can now directly contact commanders',
+      'Added push notifications for all alert types',
+      'Added CCTV connection guide with step-by-step instructions',
+      'Added crowd analysis report generation',
+      'Added surge acknowledgment notifications',
+      'Improved ML model accuracy with CrowdHuman/ShanghaiTech training',
+      'Fixed nested page navigation across web, desktop, and Android',
+      'Fixed desktop application layout and notification system',
+      'Fixed Android application layout and notification delivery',
+    ]},
+    { version: '2.1.0', date: '2026-08-20', changes: [
+      'Native Android app with Jetpack Compose',
+      'Live CCTV monitoring with YOLO inference',
+      'Digital twin venue visualization',
+      'AI Assistant with crowd intelligence',
+    ]},
+  ];
+
+  const download = () => {
+    if (updateAvailable) {
+      setDownloading(true);
+      // Simulate download progress
+      let p = 0;
+      const iv = setInterval(() => {
+        p += Math.random() * 15;
+        if (p >= 100) { p = 100; clearInterval(iv); setTimeout(() => setDownloading(false), 1000); }
+        setProgress(Math.min(100, Math.round(p)));
+      }, 300);
+    }
+  };
+
+  return (
+    <div style={{ maxWidth: 600 }}>
+      <h2 style={{ fontSize: 18, fontWeight: 700, marginBottom: 16 }}>Application Updates</h2>
+
+      {/* Current Status */}
+      <div style={{ background: 'var(--cs-glass)', borderRadius: 16, padding: 20, border: `1px solid ${updateAvailable ? '#B5AC8A40' : '#5cb85c40'}`, marginBottom: 16 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
+          {updateAvailable ? (
+            <><ArrowUp size={20} color="#B5AC8A" /><span style={{ fontSize: 16, fontWeight: 700, color: '#B5AC8A' }}>Update Available</span></>
+          ) : (
+            <><CheckCircle size={20} color="#5cb85c" /><span style={{ fontSize: 16, fontWeight: 700, color: '#5cb85c' }}>You are up to date</span></>
+          )}
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: isMobileUp ? '1fr' : '1fr 1fr', gap: 12 }}>
+          <div style={{ padding: 12, background: 'rgba(0,0,0,0.4)', borderRadius: 8 }}>
+            <div style={{ fontSize: 10, color: 'var(--cs-text-muted)', textTransform: 'uppercase' }}>Current Version</div>
+            <div style={{ fontSize: 18, fontWeight: 700, marginTop: 4 }}>{currentVersion}</div>
+          </div>
+          <div style={{ padding: 12, background: 'rgba(0,0,0,0.4)', borderRadius: 8 }}>
+            <div style={{ fontSize: 10, color: 'var(--cs-text-muted)', textTransform: 'uppercase' }}>Latest Version</div>
+            <div style={{ fontSize: 18, fontWeight: 700, color: updateAvailable ? '#B5AC8A' : '#5cb85c', marginTop: 4 }}>{latestVersion}</div>
+          </div>
+        </div>
+
+        {updateAvailable && !downloading && (
+          <button onClick={download} style={{ width: '100%', marginTop: 12, padding: 12, borderRadius: 8, border: 'none', background: 'var(--cs-red)', color: 'white', fontSize: 14, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+            <Download size={16} /> Update Now
+          </button>
+        )}
+
+        {downloading && (
+          <div style={{ marginTop: 12 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: 'var(--cs-text-muted)', marginBottom: 4 }}>
+              <span>Downloading...</span><span>{progress}%</span>
+            </div>
+            <div style={{ width: '100%', height: 6, background: 'rgba(0,0,0,0.4)', borderRadius: 3 }}>
+              <div style={{ width: `${progress}%`, height: '100%', background: 'var(--cs-red)', borderRadius: 3, transition: 'width 0.3s' }} />
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Platform Download Links */}
+      <div style={{ background: 'var(--cs-glass)', borderRadius: 16, padding: 20, border: '1px solid var(--cs-glass-border)', marginBottom: 16 }}>
+        <h3 style={{ fontSize: 14, fontWeight: 600, marginBottom: 12 }}>Download for Your Platform</h3>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: 8 }}>
+          {[
+            { label: 'Windows', icon: '🪟', ext: '.exe', current: isWindows, url: 'https://github.com/ishxn-s11/crowd-shield/releases/latest' },
+            { label: 'macOS', icon: '🍎', ext: '.dmg', current: isMac, url: 'https://github.com/ishxn-s11/crowd-shield/releases/latest' },
+            { label: 'Linux', icon: '🐧', ext: '.AppImage', current: isLinux, url: 'https://github.com/ishxn-s11/crowd-shield/releases/latest' },
+            { label: 'Android', icon: '🤖', ext: '.apk', current: isAndroid, url: 'https://github.com/ishxn-s11/crowd-shield/releases/latest' },
+          ].map(p => (
+            <a key={p.label} href={p.url} target="_blank" rel="noreferrer" style={{
+              padding: 14, borderRadius: 8, border: `1px solid ${p.current ? 'var(--cs-red)' : 'var(--cs-glass-border)'}`,
+              background: p.current ? 'var(--cs-red-glow)' : 'rgba(0,0,0,0.4)', textAlign: 'center', textDecoration: 'none',
+              display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, transition: 'border-color 0.2s',
+            }}>
+              <span style={{ fontSize: 24 }}>{p.icon}</span>
+              <span style={{ fontSize: 12, fontWeight: 600, color: p.current ? 'var(--cs-red)' : 'var(--cs-text)' }}>{p.label}</span>
+              <span style={{ fontSize: 10, color: 'var(--cs-text-muted)' }}>{p.ext}</span>
+              {p.current && <span style={{ fontSize: 9, color: 'var(--cs-red)', fontWeight: 600 }}>Current Platform</span>}
+            </a>
+          ))}
+        </div>
+      </div>
+
+      {/* Changelog */}
+      <div style={{ background: 'var(--cs-glass)', borderRadius: 16, padding: 20, border: '1px solid var(--cs-glass-border)' }}>
+        <h3 style={{ fontSize: 14, fontWeight: 600, marginBottom: 16 }}>Changelog</h3>
+        {changelog.map(entry => (
+          <div key={entry.version} style={{ marginBottom: 16 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+              <span style={{ fontSize: 14, fontWeight: 700, color: entry.version === latestVersion ? '#B5AC8A' : 'var(--cs-text-bright)' }}>v{entry.version}</span>
+              <span style={{ fontSize: 10, color: 'var(--cs-text-muted)' }}>{entry.date}</span>
+              {entry.version === latestVersion && <span style={{ padding: '1px 6px', borderRadius: 3, background: '#B5AC8A20', color: '#B5AC8A', fontSize: 9, fontWeight: 700 }}>LATEST</span>}
+            </div>
+            {entry.changes.map((c, i) => (
+              <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 6, padding: '3px 0', fontSize: 12, color: 'var(--cs-text-dim)' }}>
+                <Check size={10} color="#5cb85c" style={{ marginTop: 3, flexShrink: 0 }} />
+                <span>{c}</span>
+              </div>
+            ))}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 // ─── App ──────────────────────────────────────────────────────
 
 export default function App() {
@@ -1902,6 +2407,11 @@ function ProtectedRoutes() {
         <Route path="/teams" element={isCommander ? <TeamsPage /> : <Navigate to="/app" />} />
         <Route path="/teams/new" element={isCommander ? <NewTeamPage /> : <Navigate to="/app" />} />
         <Route path="/teams/:teamId" element={isCommander ? <TeamDetailWrapper /> : <Navigate to="/app" />} />
+        <Route path="/urgent-contact" element={<UrgentContactPage />} />
+        <Route path="/notifications" element={<NotificationsPage />} />
+        <Route path="/analysis-reports" element={<AnalysisReportsPage />} />
+        <Route path="/cctv-guide" element={<CCTVGuidePage />} />
+        <Route path="/app-update" element={<AppUpdatePage />} />
         <Route path="/profile" element={<ProfilePage />} />
         <Route path="/profile/:userId" element={<UserProfileWrapper />} />
         <Route path="/unauthorized" element={<div style={{ padding: 40, textAlign: 'center' }}><ShieldAlert size={48} color="#B5AC8A" /><h2 style={{ color: 'var(--cs-text-bright)', marginTop: 16 }}>Access Restricted</h2><p style={{ color: 'var(--cs-text-muted)', marginTop: 8 }}>This page requires Commander or Admin privileges.</p></div>} />

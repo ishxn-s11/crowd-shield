@@ -33,13 +33,15 @@ sealed class Screen(val route: String, val label: String, val icon: ImageVector,
     data object Incidents : Screen("incidents", "Incidents", Icons.Default.Warning, commanderOnly = true)
     data object Assistant : Screen("assistant", "Assistant", Icons.Default.AutoAwesome, commanderOnly = true)
     data object Teams : Screen("teams", "Teams", Icons.Default.People, commanderOnly = true)
+    data object UrgentContact : Screen("urgent_contact", "Urgent", Icons.Default.Phone, commanderOnly = false)
+    data object Notifications : Screen("notifications", "Notifs", Icons.Default.NotificationsActive, commanderOnly = false)
     data object Profile : Screen("profile", "Profile", Icons.Default.Person)
 }
 
 private val ALL_SCREENS = listOf(
     Screen.Dashboard, Screen.Zones, Screen.Cameras, Screen.DeviceCamera,
     Screen.Alerts, Screen.Missing, Screen.Incidents, Screen.Assistant,
-    Screen.Teams, Screen.Profile,
+    Screen.Teams, Screen.UrgentContact, Screen.Notifications, Screen.Profile,
 )
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -138,6 +140,8 @@ fun CrowdShieldNavHost() {
             composable(Screen.Incidents.route) { IncidentsScreen() }
             composable(Screen.Assistant.route) { AssistantScreen() }
             composable(Screen.Teams.route) { TeamsScreen() }
+            composable(Screen.UrgentContact.route) { UrgentContactScreen() }
+            composable(Screen.Notifications.route) { NotificationsScreen() }
             composable(Screen.Profile.route) {
                 ProfileScreen(onSignOut = {
                     isLoggedIn = false

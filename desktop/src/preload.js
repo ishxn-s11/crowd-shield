@@ -13,6 +13,9 @@ contextBridge.exposeInMainWorld('crowdshield', {
   // Notifications
   checkNotificationSupport: () => ipcRenderer.invoke('check-notification-support'),
   sendNotification: (title, body) => ipcRenderer.invoke('send-notification', title, body),
+  sendUrgentContact: (priority, message) => ipcRenderer.invoke('send-urgent-contact', priority, message),
+  getNotifications: () => ipcRenderer.invoke('get-notifications'),
+  markNotificationRead: (id) => ipcRenderer.invoke('mark-notification-read', id),
 
   // Platform info
   platform: process.platform,
