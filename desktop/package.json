@@ -7,6 +7,11 @@
     "name": "Ishan Singh",
     "email": "ishxn@crowdshield.io"
   },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ishxn-s11/crowd-shield.git",
+    "directory": "desktop"
+  },
   "main": "src/main.js",
   "scripts": {
     "start": "electron .",
