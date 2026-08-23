@@ -22,7 +22,6 @@
     "productName": "CrowdShield",
     "directories": { "output": "dist" },
     "files": ["src/**/*", "src/renderer/**/*"],
-    "publish": null,
     "win": {
       "target": ["nsis", "portable"],
       "icon": "build/icon.ico"
