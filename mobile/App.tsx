@@ -20,6 +20,8 @@ import IncidentsScreen from './src/screens/IncidentsScreen';
 import ProfileScreen from './src/screens/ProfileScreen';
 import AssistantScreen from './src/screens/AssistantScreen';
 import LoginScreen from './src/screens/LoginScreen';
+import UrgentContactScreen from './src/screens/UrgentContactScreen';
+import NotificationsScreen from './src/screens/NotificationsScreen';
 
 const Tab = createBottomTabNavigator();
 
@@ -33,19 +35,21 @@ const SCREEN_CONFIG: Record<string, { icon: string; commanderOnly?: boolean }> =
   'Incidents': { icon: 'alert-circle', commanderOnly: true },
   'Assistant': { icon: 'brain', commanderOnly: true },
   'Teams': { icon: 'people', commanderOnly: true },
+  'Urgent': { icon: 'call' },
+  'Notifications': { icon: 'notifications-active' },
   'Profile': { icon: 'person' },
 };
 
 const TAB_ICONS: Record<string, string> = {
   'Dashboard': 'grid', 'Zones': 'map', 'Cameras': 'videocam', 'Device Cam': 'phone-portrait',
   'Alerts': 'notifications', 'Missing': 'search', 'Incidents': 'alert-circle', 'Assistant': 'chatbubble-ellipses',
-  'Teams': 'people', 'Profile': 'person',
+  'Teams': 'people', 'Urgent': 'call', 'Notifications': 'notifications-active', 'Profile': 'person',
 };
 
 const TAB_ICONS_OUT: Record<string, string> = {
   'Dashboard': 'grid-outline', 'Zones': 'map-outline', 'Cameras': 'videocam-outline', 'Device Cam': 'phone-portrait-outline',
   'Alerts': 'notifications-outline', 'Missing': 'search', 'Incidents': 'alert-circle-outline', 'Assistant': 'chatbubble-ellipses-outline',
-  'Teams': 'people-outline', 'Profile': 'person-outline',
+  'Teams': 'people-outline', 'Urgent': 'call-outline', 'Notifications': 'notifications-outline', 'Profile': 'person-outline',
 };
 
 function AppTabs({ role }: { role: 'OPERATOR' | 'COMMANDER' }) {
@@ -88,6 +92,8 @@ function AppTabs({ role }: { role: 'OPERATOR' | 'COMMANDER' }) {
           name === 'Incidents' ? IncidentsScreen :
           name === 'Assistant' ? AssistantScreen :
           name === 'Teams' ? TeamsScreen :
+          name === 'Urgent' ? UrgentContactScreen :
+          name === 'Notifications' ? NotificationsScreen :
           ProfileScreen
         } />
       ))}
