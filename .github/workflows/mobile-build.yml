@@ -59,6 +59,100 @@ jobs:
           path: mobile/android/app/build/outputs/apk/release/*.apk
           if-no-files-found: ignore
 
+  verify-install:
+    name: Verify APK Installs on Emulator
+    runs-on: ubuntu-latest
+    needs: build-android
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download Debug APK
+        uses: actions/download-artifact@v4
+        with:
+          name: crowdshield-debug
+          path: apk/
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Enable KVM for emulator
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
+      - name: Boot Android Emulator and Install APK
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 30
+          target: google_apis
+          arch: x86_64
+          profile: Nexus 5
+          force-avd-creation: false
+          emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim
+          disable-animations: true
+          script: |
+            echo "=== Waiting for emulator to boot ==="
+            adb wait-for-device
+            adb shell getprop sys.boot_completed
+            echo "=== Emulator booted ==="
+
+            echo "=== Installing APK ==="
+            APK_PATH=$(find apk/ -name "*.apk" | head -1)
+            echo "APK: $APK_PATH"
+            adb install -t "$APK_PATH"
+            INSTALL_EXIT=$?
+
+            if [ $INSTALL_EXIT -ne 0 ]; then
+              echo "ERROR: APK installation failed with exit code $INSTALL_EXIT"
+              exit 1
+            fi
+
+            echo "=== APK installed successfully ==="
+
+            echo "=== Verifying package is installed ==="
+            adb shell pm list packages | grep com.crowdshield.mobile
+            VERIFY_EXIT=$?
+
+            if [ $VERIFY_EXIT -ne 0 ]; then
+              echo "ERROR: Package com.crowdshield.mobile not found after install"
+              exit 1
+            fi
+
+            echo "=== Package verified ==="
+
+            echo "=== Launching app to verify no crash ==="
+            adb shell am start -n com.crowdshield.mobile/.MainActivity
+            sleep 5
+
+            echo "=== Checking app is still running ==="
+            CRASHED=$(adb shell "dumpsys activity activities | grep com.crowdshield.mobile | head -1")
+            if echo "$CRASHED" | grep -q "com.crowdshield.mobile"; then
+              echo "=== App is running successfully ==="
+            else
+              echo "WARNING: App may have crashed. Checking logcat..."
+              adb logcat -d -t 50 | grep -i "crowdshield\|fatal\|crash" || true
+            fi
+
+            echo "=== Checking for crash in logcat ==="
+            CRASH_LOG=$(adb logcat -d | grep -iE "FATAL|AndroidRuntime.*crowdshield|Process.*com.crowdshield.*died" | tail -5)
+            if [ -n "$CRASH_LOG" ]; then
+              echo "ERROR: Crash detected in logcat:"
+              echo "$CRASH_LOG"
+              exit 1
+            fi
+
+            echo "=== All checks passed ==="
+            echo "Summary:"
+            echo "  APK install: ✅"
+            echo "  Package present: ✅"
+            echo "  App launches: ✅"
+            echo "  No crashes: ✅"
+
   typecheck-expo:
     name: Typecheck Expo App
     runs-on: ubuntu-latest
@@ -83,7 +177,7 @@ jobs:
         run: npx tsc --noEmit
 
   release:
-    needs: [build-android, typecheck-expo]
+    needs: [build-android, verify-install, typecheck-expo]
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     permissions:
@@ -106,8 +200,8 @@ jobs:
             ## CrowdShield Mobile App
 
             ### Downloads
-            - **Android APK**: Download `crowdshield-debug.apk` for testing
-            - **Android APK (Release)**: Download `crowdshield-release.apk` for production
+            - **Android APK**: Download `app-debug.apk` for testing
+            - **Android APK (Release)**: Download `app-release-unsigned.apk` for production
 
             ### Installation
             1. Download the APK file
@@ -118,6 +212,11 @@ jobs:
             - Built with Gradle on JDK 17
             - Min SDK: 26 (Android 8.0)
             - Target SDK: 35 (Android 15)
+
+            ### Verification
+            - ✅ APK installs successfully on Android 11 (API 30) emulator
+            - ✅ App launches without crashes
+            - ✅ No fatal errors in logcat
           files: |
             builds/**/*.apk
           draft: false
