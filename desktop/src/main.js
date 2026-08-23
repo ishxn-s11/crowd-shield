@@ -27,27 +27,34 @@ function setPermission(key, value) {
 
 // Create main window
 function createWindow() {
-  mainWindow = new BrowserWindow({
+  // titleBarStyle 'hidden' + titleBarOverlay only works on Windows 11.
+  // On Windows 10 / Linux / macOS it crashes. Use frameless only on Win11.
+  const isWin11 = process.platform === 'win32' && require('os').release().startsWith('10.0.2');
+  const windowOptions = {
     width: 1400,
     height: 900,
     minWidth: 1024,
     minHeight: 700,
     title: 'CrowdShield',
     backgroundColor: '#0a0a0f',
-    titleBarStyle: 'hidden',
-    titleBarOverlay: {
-      color: '#0a0a0f',
-      symbolColor: '#B5AC8A',
-      height: 36,
-    },
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,
       preload: path.join(__dirname, 'preload.js'),
     },
-    icon: path.join(__dirname, '..', 'build', 'icon.png'),
     show: false,
-  });
+  };
+  // Only use hidden title bar on Windows 11 where it's supported
+  if (isWin11) {
+    windowOptions.titleBarStyle = 'hidden';
+    windowOptions.titleBarOverlay = { color: '#0a0a0f', symbolColor: '#B5AC8A', height: 36 };
+  } else {
+    windowOptions.frame = true;
+  }
+  // Set icon if it exists (gracefully handle missing icon)
+  const iconPath = path.join(__dirname, '..', 'build', 'icon.png');
+  try { require('fs').accessSync(iconPath); windowOptions.icon = iconPath; } catch {}
+  mainWindow = new BrowserWindow(windowOptions);
 
   mainWindow.loadFile(path.join(__dirname, 'renderer', 'index.html'));
 
@@ -68,6 +75,11 @@ function createWindow() {
 
 // Permission request dialog
 async function requestPermission(type) {
+  // If no window, just store default
+  if (!mainWindow) {
+    setPermission(type, false);
+    return false;
+  }
   const labels = {
     camera: { title: 'Camera Access', message: 'CrowdShield needs camera access for real-time crowd detection from your device camera.' },
     microphone: { title: 'Microphone Access', message: 'CrowdShield needs microphone access for ambient noise level monitoring during crowd events.' },
@@ -127,7 +139,24 @@ ipcMain.handle('send-notification', (_, title, body) => {
 });
 
 // App lifecycle
-app.whenReady().then(createWindow);
+app.whenReady().then(() => {
+  try {
+    createWindow();
+  } catch (err) {
+    console.error('Failed to create window:', err);
+    // Retry with minimal options
+    mainWindow = new BrowserWindow({
+      width: 1200, height: 800,
+      backgroundColor: '#0a0a0f',
+      webPreferences: {
+        nodeIntegration: false,
+        contextIsolation: true,
+        preload: path.join(__dirname, 'preload.js'),
+      },
+    });
+    mainWindow.loadFile(path.join(__dirname, 'renderer', 'index.html'));
+  }
+});
 
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') app.quit();
