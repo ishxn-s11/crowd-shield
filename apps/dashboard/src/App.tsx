@@ -22,6 +22,7 @@ import HeroPage from './HeroPage';
 import VenueTwin from './VenueTwin';
 import EncryptButton from './EncryptButton';
 import ErrorBoundary from './ErrorBoundary';
+import { useWebSocketNotifications } from './useWebSocketNotifications';
 
 const API = '';
 
@@ -168,6 +169,7 @@ function Sidebar({ collapsed, setCollapsed }: { collapsed: boolean; setCollapsed
 function Header({ onMenuClick }: { onMenuClick?: () => void }) {
   const [state, setState] = useState<any>(null);
   const isMobile = useIsMobile();
+  const { unreadCount, connected } = useWebSocketNotifications();
   useEffect(() => {
     fetch(`${API}/api/risk/live`).then(r => r.json()).then(setState).catch(() => {});
     const iv = setInterval(() => fetch(`${API}/api/risk/live`).then(r => r.json()).then(setState).catch(() => {}), 3000);
@@ -198,7 +200,19 @@ function Header({ onMenuClick }: { onMenuClick?: () => void }) {
         {!isMobile && <span style={{ fontSize: 12, color: 'var(--cs-text-dim)' }}>7 zones monitored</span>}
       </div>
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexShrink: 0 }}>
-        <span style={{ fontSize: 11, color: '#5cb85c' }}>● LIVE</span>
+        {/* Notification bell with real-time badge */}
+        <Link to="/notifications" style={{ position: 'relative', display: 'flex', alignItems: 'center', padding: 4, borderRadius: 6, textDecoration: 'none' }}>
+          <Bell size={16} color="var(--cs-text-dim)" />
+          {unreadCount > 0 && (
+            <span style={{ position: 'absolute', top: -2, right: -4, minWidth: 16, height: 16, borderRadius: 8, background: 'var(--cs-red)', color: 'white', fontSize: 9, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 4px', border: '1px solid var(--cs-bg)' }}>
+              {unreadCount > 99 ? '99+' : unreadCount}
+            </span>
+          )}
+        </Link>
+        <span style={{ fontSize: 11, color: connected ? '#5cb85c' : '#C50022', display: 'flex', alignItems: 'center', gap: 4 }}>
+          <div style={{ width: 6, height: 6, borderRadius: 3, background: connected ? '#5cb85c' : '#C50022', animation: connected ? 'pulse 2s infinite' : 'none' }} />
+          {connected ? 'LIVE' : 'OFFLINE'}
+        </span>
       </div>
     </header>
   );
@@ -358,6 +372,8 @@ function ElapsedBar({ createdAt, maxSeconds = 300 }: { createdAt: string; maxSec
 function DashboardPage() {
   const [state, setState] = useState<any>(null);
   const [alerts, setAlerts] = useState<any[]>([]);
+  const [surgeAcknowledged, setSurgeAcknowledged] = useState(false);
+  const { addNotification } = useWebSocketNotifications();
 
   const dismissAlert = async (alertId: string) => {
     setAlerts(prev => prev.filter(a => a.id !== alertId));
@@ -373,6 +389,34 @@ function DashboardPage() {
     const iv = setInterval(load, 2000);
     return () => clearInterval(iv);
   }, []);
+
+  // Surge acknowledgment: when risk goes CRITICAL, send notification
+  useEffect(() => {
+    if (state?.overall_risk_level === 'CRITICAL' && !surgeAcknowledged) {
+      setSurgeAcknowledged(true);
+      addNotification({
+        type: 'ACKNOWLEDGEMENT',
+        title: '🚨 Crowd Surge Detected — Acknowledgment Required',
+        body: `Overall risk is CRITICAL (${Math.round(state.overall_risk)}/100). Surge detected across monitored zones. All response teams should be on standby.`,
+        priority: 'CRITICAL',
+        zoneId: 'ALL',
+      });
+      // Send via WebSocket/API
+      fetch(`${API}/api/urgent-contact/send`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          message: `CROWD SURGE ALERT: Risk level CRITICAL at ${Math.round(state.overall_risk)}/100. Immediate acknowledgment required.`,
+          priority: 'EMERGENCY',
+          sender_name: 'CrowdShield AI',
+          sender_role: 'SYSTEM',
+        }),
+      }).catch(() => {});
+    }
+    if (state?.overall_risk_level !== 'CRITICAL') {
+      setSurgeAcknowledged(false);
+    }
+  }, [state?.overall_risk_level, surgeAcknowledged]);
 
   const user = AuthContext.getUser();
   const role = user?.role || 'OPERATOR';
