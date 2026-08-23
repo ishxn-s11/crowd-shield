@@ -2,6 +2,11 @@
   "name": "crowdshield-desktop",
   "version": "1.0.0",
   "description": "CrowdShield AI - Desktop Command Center",
+  "homepage": "https://github.com/ishxn-s11/crowd-shield",
+  "author": {
+    "name": "Ishan Singh",
+    "email": "ishxn@crowdshield.io"
+  },
   "main": "src/main.js",
   "scripts": {
     "start": "electron .",
@@ -29,7 +34,8 @@
     "linux": {
       "target": ["AppImage", "deb"],
       "icon": "build/icon.png",
-      "category": "Utility"
+      "category": "Utility",
+      "maintainer": "Ishan Singh <ishxn@crowdshield.io>"
     },
     "nsis": {
       "oneClick": false,
