@@ -102,10 +102,10 @@ jobs:
             - Location: for emergency navigation
             - Screen Capture: for CCTV monitoring
           files: |
-            builds/**/desktop/dist/*.exe
-            builds/**/desktop/dist/*.AppImage
-            builds/**/desktop/dist/*.deb
-            builds/**/desktop/dist/*.zip
+            builds/desktop-*/**/*.exe
+            builds/desktop-*/**/*.AppImage
+            builds/desktop-*/**/*.deb
+            builds/desktop-*/**/*.zip
           draft: false
           prerelease: false
         env:
