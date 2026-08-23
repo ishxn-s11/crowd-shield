@@ -92,7 +92,7 @@ jobs:
         run: |
           FILE_TYPE=$(file "${{ steps.find-apk.outputs.apk_path }}")
           echo "File type: $FILE_TYPE"
-          if echo "$FILE_TYPE" | grep -q "Zip archive\|Java archive"; then
+          if echo "$FILE_TYPE" | grep -q "Zip archive\|Java archive\|Android package"; then
             echo "✅ APK is a valid archive"
           else
             echo "ERROR: APK is not a valid archive"
